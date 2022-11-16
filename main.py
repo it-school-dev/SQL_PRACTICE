@@ -1,97 +1,66 @@
-import sqlite3
-import db_lib
+from selenium import webdriver 
+from selenium.webdriver.common.by import By
+import codecs
+import time
+import json
 
-# db = sqlite3.connect('test.sqlite3')
-
-# cursor = db.cursor()
-
-
-## Создание таблицы
-# cursor.execute('''
-#         CREATE TABLE IF NOT EXISTS users(
-#             id INTEGER PRIMARY KEY,
-#             name TEXT,
-#             phone TEXT,
-#             email TEXT,
-#             password TEXT
-#         )
-# ''')
+driver = webdriver.Chrome(executable_path="./webdriver/chromedriver.exe")
 
 
 
-## Вставка данных
+def main():
+    try:
+        driver.get("https://www.wildberries.ru/")
+        time.sleep(15)
 
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(15)
 
-# Единичная вставка
-# name = "Anton1"
-# phone = "123456"
-# email = "anton@email.net"
-# password = "GTY45f8"
+        goods_arr = driver.find_elements(By.CLASS_NAME, "goods__item")
 
-# cursor.execute('''
-#     INSERT INTO users(name, phone, email, password) VALUES(?, ?, ?, ?)
-# ''', (name, phone, email, password))
-# db.commit()
+        goods_str = ''
 
+        json_list =[]
 
+        for good in goods_arr:
+            good_title = good.find_elements(By.CSS_SELECTOR, ".goods-card__description span")[1].text
+            good_price =  good.find_element(By.CSS_SELECTOR, ".goods-card__price-now").text[:-2]
+            good_link = good.find_element(By.CLASS_NAME, 'goods-card__container').get_attribute('href')
+            
+            jsn = {
+                'title': good_title,
+                'price_rub': good_price,
+                'link': good_link
+                }
 
-
-# Множественная вставка
-users = [
-    ("u1", "1", "@1", "q1"),
-    ("u2", "2", "@2", "q2"),
-    ("u3", "3", "@3", "q3")
-]
-
-# cursor.executemany('''
-#     INSERT INTO users(name, phone, email, password) VALUES(?, ?, ?, ?)
-# ''', users)
-# db.commit()
-
-
-
-## Получение данных
-
-# id = input("enter id: ")
-
-# cursor.execute('''
-#     SELECT * FROM users
-#     WHERE users.id = ?
-# ''', (id))
-
-# user = cursor.fetchall()
-
-# print(user)
+            json_list.append(jsn)
 
 
 
-## Обновление данных
-# id = input("enter id: ")
-# name = input("enter name: ")
 
-# cursor.execute('''
-#     UPDATE users SET name = ? WHERE id = ?
-# ''', (name, id))
-# db.commit()
+        with codecs.open("parsed_data.json", "wb", "utf-8") as stream:
+            json.dump(json_list, stream, ensure_ascii = False)
+
+    except Exception as ex:
+        print("An error occured: \n" + str(ex))
 
 
-
-# Удвление таблицы
-# cursor.execute('''
-#     DROP TABLE IF EXISTS users2
-# ''')
+main()
 
 
-# db.close()
+driver = webdriver.Chrome(executable_path="./webdriver/chromedriver.exe")
 
+driver.get("https://www.wildberries.ru/")
+time.sleep(10)
 
-## Обработка ошибок и исключений
-try:
-    db = sqlite3.connect('test.sqlite3')
-    cursor = db.cursor()
+driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+time.sleep(3)
 
-    db_lib.change_name(1, "Sergey", cursor, db)
-    
-except Exception as ex:
-    db.rollback()
-    raise ex
+goods_arr = driver.find_elements(By.CLASS_NAME, "goods__item")
+
+good_price =  goods_arr[0].find_element(By.CSS_SELECTOR, ".goods-card__price-now").text[:-2]
+print(good_price)
+good_link = goods_arr[0]
+print(good_link)
+
+goods_arr[0].find_element(By.CLASS_NAME, 'goods-card__container').get_attribute('href')
